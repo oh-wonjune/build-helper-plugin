@@ -1,7 +1,7 @@
 {
   "name": "build-helper-plugin",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "private": false,
   "dependencies": {
     "@testing-library/jest-dom": "5.16.5",
     "@testing-library/react": "13.4.0",
@@ -40,5 +40,18 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "description": "A webpack plugin to build only modified files when building with Jenkins.",
+  "main": "src/index.js",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oh-wonjune/build-helper-plugin.git"
+  },
+  "author": "ohwonjune <kbw0309@naver.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/oh-wonjune/build-helper-plugin/issues"
+  },
+  "homepage": "https://github.com/oh-wonjune/build-helper-plugin#readme"
 }

@@ -1,17 +1,43 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+const {Compiler} = require('webpack');
+const {execSync} = require('child_process');
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+class BuildHelperPlugin {
+    constructor() {
+        this.pluginName = 'BuildHelperPlugin';
+    }
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+    apply(compiler) {
+        const modifiedFiles = getModifiedFiles();
+
+        compiler.plugin('emit', (compilation, callback) => {
+            const assetsToBuild = new Set(modifiedFiles);
+
+            compilation.modules.forEach((module) => {
+                // 변경된 파일의 종속성을 찾습니다.
+                if (module.resource && modifiedFiles.includes(module.resource)) {
+                    module.dependencies.forEach((dependency) => {
+                        if (dependency.module && dependency.module.resource) {
+                            assetsToBuild.add(dependency.module.resource);
+                        }
+                    });
+                }
+            });
+
+            // 변경된 파일과 그 종속성만 빌드하도록 웹팩 빌드를 조절합니다.
+            compilation.assets = Object.keys(compilation.assets)
+                .filter((asset) => assetsToBuild.has(asset))
+                .reduce((acc, file) => {
+                    acc[file] = compilation.assets[file];
+                    return acc;
+                }, {});
+            callback();
+        });
+    }
+}
+
+function getModifiedFiles() {
+    const output = execSync('git diff --name-only HEAD').toString();
+    return output.trim().split('\n');
+}
+
+module.exports = BuildHelperPlugin;

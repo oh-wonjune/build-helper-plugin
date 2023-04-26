@@ -1,5 +1,6 @@
 const {Compiler} = require('webpack');
 const {execSync} = require('child_process');
+const path = require('path');
 
 class BuildHelperPlugin {
     constructor() {
@@ -10,14 +11,15 @@ class BuildHelperPlugin {
         const modifiedFiles = getModifiedFiles();
 
         compiler.plugin('emit', (compilation, callback) => {
-            const assetsToBuild = new Set(modifiedFiles);
 
+            const assetsToBuild = new Set(modifiedFiles);
+            // 변경된 파일의 종속성을 찾습니다.
             compilation.modules.forEach((module) => {
-                // 변경된 파일의 종속성을 찾습니다.
                 if (module.resource && modifiedFiles.includes(module.resource)) {
-                    module.dependencies.forEach((dependency) => {
-                        if (dependency.module && dependency.module.resource) {
-                            assetsToBuild.add(dependency.module.resource);
+                    assetsToBuild.add(module.resource);
+                    module.reasons.forEach((reason) => {
+                        if (reason.module && reason.module.resource) {
+                            assetsToBuild.add(reason.module.resource);
                         }
                     });
                 }
@@ -30,6 +32,7 @@ class BuildHelperPlugin {
                     acc[file] = compilation.assets[file];
                     return acc;
                 }, {});
+
             callback();
         });
     }
@@ -37,7 +40,10 @@ class BuildHelperPlugin {
 
 function getModifiedFiles() {
     const output = execSync('git diff --name-only HEAD').toString();
-    return output.trim().split('\n');
+    const relativePaths = output.trim().split('\n');
+    const projectRoot = process.cwd();
+
+    return relativePaths.map((relativePath) => path.resolve(projectRoot, relativePath));
 }
 
 module.exports = BuildHelperPlugin;

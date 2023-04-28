@@ -3,8 +3,9 @@ const {execSync} = require('child_process');
 const path = require('path');
 
 class BuildHelperPlugin {
-    constructor() {
-        this.pluginName = 'BuildHelperPlugin';
+    constructor(prod_Branch, dev_Branch) {
+        this.prod_Branch = prod_Branch;
+        this.dev_Branch = dev_Branch;
     }
 
     apply(compiler) {
@@ -39,7 +40,7 @@ class BuildHelperPlugin {
 }
 
 function getModifiedFiles() {
-    const output = execSync('git diff --name-only HEAD').toString();
+    const output = execSync('git diff --name-only '+this.prod_Branch+' '+ this.dev_Branch).toString();
     const relativePaths = output.trim().split('\n');
     const projectRoot = process.cwd();
 
